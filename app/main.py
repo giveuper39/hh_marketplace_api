@@ -22,19 +22,19 @@ app = FastAPI(lifespan=lifespan)
 
 
 @app.post("/categories")
-def create_category(category: CategorySchema):
+def create_category(category: CategorySchema) -> CategorySchema:
     category = Category.create(name=category.name)
     return category
 
 
 @app.post("/tags")
-def create_tag(tag: TagSchema):
+def create_tag(tag: TagSchema) -> TagSchema:
     tag = Tag.create(name=tag.name)
     return tag
 
 
 @app.post("/items", response_model=ItemResponseSchema)
-def create_item(item_data: ItemCreateSchema) -> Item:
+def create_item(item_data: ItemCreateSchema) -> ItemResponseSchema:
     try:
         category = Category.get_by_id(item_data.category_id)
     except Category.DoesNotExist:
@@ -47,14 +47,13 @@ def create_item(item_data: ItemCreateSchema) -> Item:
     if item_data.tags:
         tags = Tag.select().where(Tag.id.in_(item_data.tags))
         item.tags.add(tags)
-    
+    print(item.id, item.name, item.description, item.price)
     return item
 
 
 @app.get("/items", response_model=List[ItemResponseSchema])
-def get_items(category_id: Optional[int] = None, tag_ids: Optional[List[int]] = None) -> List[Item]:
+def get_items(category_id: Optional[int] = None, tag_ids: Optional[List[int]] = None) -> List[ItemResponseSchema]:
     query = Item.select()
-
     if category_id is not None:
         query = query.where(Item.category == category_id)
 
@@ -62,11 +61,12 @@ def get_items(category_id: Optional[int] = None, tag_ids: Optional[List[int]] = 
         query = query.join(ItemTag).where(ItemTag.tag.in_(tag_ids))
 
     items = list(query)
+    print(items)
     return items
 
 
 @app.get("/items/{item_id}", response_model=ItemResponseSchema)
-def get_item(item_id: int) -> Item:
+def get_item(item_id: int) -> ItemResponseSchema:
     try:
         item = Item.get_by_id(item_id)
         return item
@@ -75,7 +75,7 @@ def get_item(item_id: int) -> Item:
 
 
 @app.put("/items/{item_id}", response_model=ItemResponseSchema)
-def update_item(item_id: int, item_data: ItemUpdateSchema) -> Item:
+def update_item(item_id: int, item_data: ItemUpdateSchema) -> ItemResponseSchema:
     try:
         item = Item.get_by_id(item_id)
         category = Category.get_by_id(item_data.category_id)
