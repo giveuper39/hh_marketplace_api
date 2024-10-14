@@ -1,0 +1,21 @@
+[tool.poetry]
+name = "rest-marketplace"
+version = "0.1.0"
+description = "REST API for item management on marketplace."
+authors = ["Eugene <giveuper39@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+fastapi = "^0.115.2"
+
+
+[tool.poetry.group.dev.dependencies]
+black = "^24.10.0"
+ruff = "^0.6.9"
+mypy = "^1.11.2"
+pytest = "^8.3.3"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
