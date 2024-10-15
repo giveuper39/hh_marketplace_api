@@ -3,21 +3,21 @@ from .db import db
 
 
 class Tag(Model):
-    name = CharField(max_length=255)
+    name = CharField(max_length=255, unique=True)
 
     class Meta:
         database = db
 
 
 class Category(Model):
-    name = CharField(max_length=255)
+    name = CharField(max_length=255, unique=True)
 
     class Meta:
         database = db
 
 
 class Item(Model):
-    name = CharField(max_length=255)
+    name = CharField(max_length=255, unique=True)
     description = TextField(null=True)
     category = ForeignKeyField(Category, backref="items")
     price = IntegerField()

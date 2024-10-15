@@ -9,11 +9,19 @@ class CategorySchema(BaseModel):
         from_attributes = True
 
 
+class CategoryResponseSchema(CategorySchema):
+    id: int
+
+
 class TagSchema(BaseModel):
     name: str
 
     class Config:
         from_attributes = True
+
+
+class TagResponseSchema(TagSchema):
+    id: int
 
 
 class ItemBaseSchema(BaseModel):
@@ -36,8 +44,8 @@ class ItemUpdateSchema(ItemBaseSchema):
 
 class ItemResponseSchema(ItemBaseSchema):
     id: int
-    category: CategorySchema
-    tags: List[TagSchema]
+    category: CategoryResponseSchema
+    tags: List[TagResponseSchema]
     price: int
 
     class Config:

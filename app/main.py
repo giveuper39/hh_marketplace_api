@@ -1,9 +1,19 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Query
 from contextlib import asynccontextmanager
+
 from .models import Item, Category, Tag, ItemTag
-from .schemas import ItemCreateSchema, ItemUpdateSchema, ItemResponseSchema, CategorySchema, TagSchema
+from .schemas import (
+    ItemCreateSchema,
+    ItemUpdateSchema,
+    ItemResponseSchema,
+    CategorySchema,
+    TagSchema,
+    CategoryResponseSchema,
+    TagResponseSchema,
+)
+from peewee import fn
 from .db import db
-from typing import Optional, List
+from typing import Optional, List, Annotated
 
 
 @asynccontextmanager
@@ -21,13 +31,13 @@ async def lifespan(app: FastAPI):
 app = FastAPI(lifespan=lifespan)
 
 
-@app.post("/categories")
+@app.post("/categories", response_model=CategoryResponseSchema)
 def create_category(category: CategorySchema) -> CategorySchema:
     category = Category.create(name=category.name)
     return category
 
 
-@app.post("/tags")
+@app.post("/tags", response_model=TagResponseSchema)
 def create_tag(tag: TagSchema) -> TagSchema:
     tag = Tag.create(name=tag.name)
     return tag
@@ -47,21 +57,23 @@ def create_item(item_data: ItemCreateSchema) -> ItemResponseSchema:
     if item_data.tags:
         tags = Tag.select().where(Tag.id.in_(item_data.tags))
         item.tags.add(tags)
-    print(item.id, item.name, item.description, item.price)
     return item
 
 
 @app.get("/items", response_model=List[ItemResponseSchema])
-def get_items(category_id: Optional[int] = None, tag_ids: Optional[List[int]] = None) -> List[ItemResponseSchema]:
+def get_items(
+    category_id: Optional[int] = None, tag_ids: Annotated[list[int] | None, Query()] = None
+) -> List[ItemResponseSchema]:
     query = Item.select()
+    print(tag_ids)
     if category_id is not None:
         query = query.where(Item.category == category_id)
-
     if tag_ids is not None:
-        query = query.join(ItemTag).where(ItemTag.tag.in_(tag_ids))
+        query = query.join(ItemTag).join(Tag).where(Tag.id.in_(tag_ids)).group_by(Item.id)
+
+        query = query.having(fn.COUNT(Tag.id) == len(tag_ids))
 
     items = list(query)
-    print(items)
     return items
 
 
